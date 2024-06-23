@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>GPX Viewer</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-elevation/dist/leaflet-elevation.min.css" />
+  <style>
+    #map { height: 50vh; }
+    #elevation-chart { height: 200px; }
+    .info {
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>GPX Viewer</h1>
+  <input type="file" id="gpx-file" />
+  <div class="info">
+    <p>Distance: <span id="distance">0</span> km</p>
+    <p>Dénivelé: <span id="elevation">0</span> m</p>
+  </div>
+  <div id="map"></div>
+  <div id="elevation-chart"></div>
+
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/togpx/togpx.js"></script>
+  <script src="https://unpkg.com/leaflet-elevation/dist/leaflet-elevation.min.js"></script>
+  <script src="https://unpkg.com/leaflet-gpx"></script>
+  <script>
+    var map = L.map('map').setView([51.505, -0.09], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    var controlElevation = L.control.elevation({
+      position: 'topright',
+      theme: 'steelblue-theme',
+      width: 600,
+      height: 125,
+      margins: {
+        top: 10,
+        right: 20,
+        bottom: 30,
+        left: 50
+      },
+      useHeightIndicator: true,
+      interpolation: 'linear',
+      hoverNumber: {
+        decimalsX: 3,
+        decimalsY: 0,
+        formatter: undefined
+      },
+      xTicks: undefined,
+      yTicks: undefined,
+      collapsed: false,
+      imperial: false
+    }).addTo(map);
+
+    document.getElementById('gpx-file').addEventListener('change', function(event) {
+      var file = event.target.files[0];
+      if (!file) return;
+
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        var gpx = e.target.result;
+        new L.GPX(gpx, { async: true }).on('loaded', function(e) {
+          var gpxLayer = e.target;
+          map.fitBounds(gpxLayer.getBounds());
+
+          var distance = gpxLayer.get_distance() / 1000; // distance in km
+          var elevation = gpxLayer.get_elevation_gain(); // elevation gain in meters
+
+          document.getElementById('distance').textContent = distance.toFixed(2);
+          document.getElementById('elevation').textContent = elevation.toFixed(2);
+
+          gpxLayer.eachLayer(function(layer) {
+            controlElevation.addData(layer.feature);
+          });
+        }).addTo(map);
+      };
+      reader.readAsText(file);
+    });
+  </script>
+</body>
+</html>
