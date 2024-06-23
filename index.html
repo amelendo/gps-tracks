@@ -19,7 +19,7 @@
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
 
-    var gpx = 'E:\Traces GPX\transecrins_2024.gpx'; // chemin vers votre fichier GPX
+    var gpx = 'GPX/transecrins_2024.gpx'; // chemin vers votre fichier GPX
     new L.GPX(gpx, { async: true }).on('loaded', function(e) {
       map.fitBounds(e.target.getBounds());
     }).addTo(map);
